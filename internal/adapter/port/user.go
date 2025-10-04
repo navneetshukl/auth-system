@@ -7,5 +7,5 @@ import (
 
 type UserRepository interface {
 	RegisterUser(ctx context.Context, user *user.User) error
-	LoginUser(ctx context.Context, email, password string) (*user.User, error)
+	FindUserByEmail(ctx context.Context, email string) (*user.User, error)
 }

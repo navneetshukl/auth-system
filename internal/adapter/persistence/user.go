@@ -25,13 +25,12 @@ func (u *UserRepositoryImpl) RegisterUser(ctx context.Context, user *user.User) 
 
 	return nil
 }
-func (u *UserRepositoryImpl) LoginUser(ctx context.Context, email string) (*user.User, error) {
+func (u *UserRepositoryImpl) FindUserByEmail(ctx context.Context, email string) (*user.User, error) {
 	query := `SELECT  name, email, password, mobile FROM users WHERE email = $1;`
 	var usr user.User
 	err := u.db.QueryRowContext(ctx, query, email).Scan(
 		&usr.Name,
 		&usr.Email,
-		&usr.Password,
 		&usr.Mobile,
 	)
 	if err != nil {

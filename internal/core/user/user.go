@@ -1,6 +1,9 @@
 package user
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type User struct {
 	Name      string     `json:"name"`
@@ -9,4 +12,8 @@ type User struct {
 	Mobile    string     `json:"mobile"`
 	CreatedAt *time.Time `json:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at"`
+}
+
+type UserService interface {
+	RegisterUser(ctx context.Context, data *User) error
 }
