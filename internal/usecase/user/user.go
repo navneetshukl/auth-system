@@ -1,4 +1,4 @@
-package usecase
+package user
 
 import (
 	"auth-system/internal/adapter/port"
@@ -29,41 +29,45 @@ func (u *UserServiceImpl) RegisterUser(ctx context.Context, data *userSvc.User) 
 	}
 
 	// hash the password
-	hashedPassword,err:=utils.HashPassword(data.Password)
-	if err!=nil{
+	hashedPassword, err := utils.HashPassword(data.Password)
+	if err != nil {
 		return userSvc.ErrSomethingWentWrong
 	}
-	user:=&userSvc.User{
-		Name: data.Name,
-		Email: data.Email,
+	user := &userSvc.User{
+		Name:     data.Name,
+		Email:    data.Email,
 		Password: hashedPassword,
-		Mobile: data.Mobile,
+		Mobile:   data.Mobile,
 	}
 
-	err=u.userRepo.RegisterUser(ctx,user)
-	if err!=nil{
+	err = u.userRepo.RegisterUser(ctx, user)
+	if err != nil {
 		return userSvc.ErrInsertingUser
 	}
 	return nil
 }
-func (u *UserServiceImpl) LoginUser(ctx context.Context,email,password string)(*userSvc.User,error){
+func (u *UserServiceImpl) LoginUser(ctx context.Context, email, password string) (*userSvc.User, string, error) {
 
-	user,err:=u.userRepo.FindUserByEmail(ctx,email)
-	if err!=nil{
-		if err==sql.ErrNoRows{
-			return nil,userSvc.ErrInvalidCredentials
+	user, err := u.userRepo.FindUserByEmail(ctx, email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, "", userSvc.ErrInvalidCredentials
 		}
-		return nil,userSvc.ErrSomethingWentWrong
+		return nil, "", userSvc.ErrSomethingWentWrong
 	}
 
-	if user==nil{
-		return nil,userSvc.ErrInvalidCredentials
+	if user == nil {
+		return nil, "", userSvc.ErrInvalidCredentials
 	}
-	err=utils.ComparePassword(user.Password,password)
-	if err!=nil{
-		return nil,userSvc.ErrInvalidCredentials
+	err = utils.ComparePassword(user.Password, password)
+	if err != nil {
+		return nil, "", userSvc.ErrInvalidCredentials
 	}
-	return user,nil
 
+	token, err := userSvc.GenerateJWT(user.Email)
+	if err != nil {
+		return nil, "", userSvc.ErrSomethingWentWrong
+	}
+	return user, token, nil
 
 }
