@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"auth-system/internal/core/user"
+	ratelimiting "auth-system/pkg/rateLimit"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -33,7 +34,6 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		if claims, ok := token.Claims.(*user.Claims); ok && token.Valid {
-			// 4️⃣ Save the user info in the Gin context
 			c.Set("username", claims.Username)
 			c.Next()
 			return
@@ -44,5 +44,29 @@ func AuthMiddleware() gin.HandlerFunc {
 			"status": http.StatusUnauthorized,
 		})
 		c.Abort()
+	}
+}
+
+var rateLimiter = ratelimiting.NewTokenBucket(1, 5)
+
+// RateLimitMiddleware limits requests per user/email
+func RateLimitMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userIdentifier := c.GetString("username")
+
+		if userIdentifier == "" {
+			userIdentifier = c.ClientIP()
+		}
+
+		if !rateLimiter.AllowRequest(userIdentifier) {
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"error":  "too many requests, please try again later",
+				"status": http.StatusTooManyRequests,
+			})
+			c.Abort()
+			return
+		}
+
+		c.Next()
 	}
 }
