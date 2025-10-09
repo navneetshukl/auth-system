@@ -8,4 +8,5 @@ import (
 type UserRepository interface {
 	RegisterUser(ctx context.Context, user *user.User) error
 	FindUserByEmail(ctx context.Context, email string) (*user.User, error)
+	UpdateUser(ctx context.Context, email string) error
 }

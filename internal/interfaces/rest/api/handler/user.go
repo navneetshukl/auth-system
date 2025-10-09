@@ -20,8 +20,8 @@ func NewUserHandler(userUseCase user.UserServiceImpl) UserHandler {
 }
 
 func (h *UserHandler) RegisterHandler(c *gin.Context) {
-	var user *model.User
-	err := c.ShouldBindJSON(&user)
+	var userData *model.User
+	err := c.ShouldBindJSON(&userData)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":  "something went wrong",
@@ -31,9 +31,19 @@ func (h *UserHandler) RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	err = h.UserUseCase.RegisterUser(context.Background(), user)
+	err = h.UserUseCase.RegisterUser(context.Background(), userData)
 	if err != nil {
 		handlerError(c, err)
+		return
+	}
+	token, err := model.GenerateJWT(userData.Email, 5)
+	h.UserUseCase.SendMail(context.Background(),userData,token)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":  "something went wrong",
+			"status": http.StatusInternalServerError,
+			"data":   nil,
+		})
 		return
 	}
 	c.JSON(http.StatusInternalServerError, gin.H{

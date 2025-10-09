@@ -10,4 +10,5 @@ var (
 	ErrSomethingWentWrong error = errors.New("something went wrong")
 	ErrInsertingUser      error = errors.New("error inserting user to DB")
 	ErrInvalidCredentials error=errors.New("invalid credentials")
+	ErrInvalidToken error=errors.New("token is invalid")
 )

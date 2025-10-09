@@ -43,3 +43,23 @@ func (u *UserRepositoryImpl) FindUserByEmail(ctx context.Context, email string) 
 	}
 	return &usr, nil
 }
+
+func (u *UserRepositoryImpl) UpdateUser(ctx context.Context, email string) error {
+	query := `UPDATE users SET is_verified = TRUE WHERE email = $1;`
+
+	result, err := u.db.ExecContext(ctx, query, email)
+	if err != nil {
+		return err 
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
